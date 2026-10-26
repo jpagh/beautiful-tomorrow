@@ -1,0 +1,50 @@
+# Beautiful Tomorrow — night.
+#
+# The single source of truth for every artifact in this repo: the Kakoune
+# colourscheme, the Giallo TextMate theme, and the Ghostty/Foot terminal themes
+# are all checked against (and, for the terminal, generated from) this file.
+#
+# Canonical here is the Tomorrow palette the terminal has been using, because
+# the Kakoune theme already matched it to within rounding. See palette/light.toml
+# for why the light variant goes the other way.
+
+background = "1d1f21"
+foreground = "c5c8c6"
+cursor = "c5c8c6"
+cursor_text = "1d1f21"
+selection = "373b41"
+
+# Editor-only roles. `orange` and `operator` have no ANSI slot; a 16-colour
+# terminal approximates orange with yellow.
+[syntax]
+comment = "969896"
+string = "b5bd68"
+keyword = "b294bb"
+function = "81a2be"
+type = "f0c674"
+constant = "cc6666"
+orange = "de935f"
+variable = "c5c8c6"
+operator = "e9b36d"
+aqua = "8abeb7"
+
+# Terminal-owned slots, in ANSI order. Slot 8 is Chris Kempson's `comment`
+# rather than the presets' #4c4c4c, which is 1.9:1 on this background and is
+# what zsh-autosuggestions and fzf paint dim text with.
+[ansi]
+0 = "000000"
+1 = "cc6666"
+2 = "b5bd68"
+3 = "f0c674"
+4 = "81a2be"
+5 = "b294bb"
+6 = "8abeb7"
+7 = "ffffff"
+8 = "969896"
+9 = "cc6666"
+10 = "b5bd68"
+11 = "f0c674"
+12 = "81a2be"
+13 = "b294bb"
+14 = "8abeb7"
+15 = "ffffff"

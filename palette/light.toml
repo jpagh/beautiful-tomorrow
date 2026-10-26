@@ -1,0 +1,49 @@
+# Beautiful Tomorrow — light.
+#
+# Here the canonical source is the *editor* palette: the light rendition of the
+# night theme with lightness inverted. Measured in OKLCH, its syntax hues sit
+# within 0.2–3.3 degrees of the night theme's (mean 1.5), and its chroma is
+# unchanged, whereas stock Tomorrow light is a separately designed sibling that
+# drifts up to 11 degrees and is twice as saturated. Keeping the editor's light
+# palette keeps night and light recognisably the same theme, so the terminal
+# follows the editor here rather than the other way round.
+
+background = "ffffff"
+foreground = "282a2e"
+cursor = "282a2e"
+cursor_text = "ffffff"
+selection = "e5e5e5"
+
+[syntax]
+comment = "959795"
+string = "737935"
+keyword = "946ca1"
+function = "5884a9"
+type = "e9ad35"
+constant = "b83d3d"
+orange = "d2702b"
+variable = "202225"
+operator = "e09432"
+# Borrowed from stock Tomorrow light: this theme has no cyan of its own, and
+# slot 6 needs one. It reads as clearly distinct from the blue (slot 4).
+aqua = "3e999f"
+
+# Terminal-owned slots. 0, 7 and 15 are greys the editor has no equivalent for:
+# 7 must not be #ffffff on a #ffffff background, so it stays stock #bfbfbf.
+[ansi]
+0 = "000000"
+1 = "b83d3d"
+2 = "737935"
+3 = "e9ad35"
+4 = "5884a9"
+5 = "946ca1"
+6 = "3e999f"
+7 = "bfbfbf"
+8 = "959795"
+9 = "b83d3d"
+10 = "737935"
+11 = "e9ad35"
+12 = "5884a9"
+13 = "946ca1"
+14 = "3e999f"
+15 = "ffffff"
