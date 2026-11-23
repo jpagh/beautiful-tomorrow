@@ -4,10 +4,11 @@
     python3 generate.py           write terminal/ghostty/* and terminal/foot/theme.ini
     python3 generate.py --check   exit 1 if the files on disk differ
 
-The Kakoune colourschemes and the Giallo themes are hand-authored (a theme is
-more than a palette), and tests/test_parity.py enforces that every colour they
-share with the palette matches it exactly. Everything the terminal needs is
-generated, because a terminal theme is nothing but the palette in another syntax.
+The Kakoune colourschemes, Giallo themes and Zed theme are hand-authored (a
+theme is more than a palette), and tests/test_parity.py enforces that every
+colour they share with the palette matches it exactly. Everything the terminal
+needs is generated, because a terminal theme is nothing but the palette in
+another syntax.
 """
 import sys
 import tomllib

@@ -21,11 +21,30 @@ import spec  # noqa: E402
 VARIANTS = ("night", "light")
 KAK = {v: ROOT / "kakoune" / "colors" / f"beautiful-tomorrow-{v}.kak" for v in VARIANTS}
 GIALLO = {v: ROOT / "giallo" / f"beautiful-tomorrow-{v}.json" for v in VARIANTS}
+ZED = ROOT / "zed" / "themes" / "beautiful-tomorrow.json"
+ZED_VARIANT_NAMES = {
+    "night": ("Beautiful Tomorrow Night", "dark"),
+    "light": ("Beautiful Tomorrow Light", "light"),
+}
 
 
 def palette(name):
     with open(ROOT / "palette" / f"{name}.toml", "rb") as f:
         return tomllib.load(f)
+
+
+def zed_themes():
+    with ZED.open() as f:
+        family = json.load(f)
+    return family, {t["name"]: t for t in family["themes"]}
+
+
+def hex_rgb(value):
+    """Normalise a #rrggbb or #rrggbbaa colour string to lowercase rrggbb."""
+    m = re.fullmatch(r"#([0-9a-fA-F]{6})(?:[0-9a-fA-F]{2})?", value)
+    if not m:
+        raise AssertionError(f"invalid hex colour: {value!r}")
+    return m.group(1).lower()
 
 
 def faces(path):
@@ -108,6 +127,69 @@ class PaletteAgreementTest(unittest.TestCase):
         for name in VARIANTS:
             with GIALLO[name].open() as f:
                 self.assertIsInstance(json.load(f), dict)
+
+    def test_zed_theme_is_valid_family(self):
+        family, themes = zed_themes()
+        self.assertEqual(family.get("$schema"), "https://zed.dev/schema/themes/v0.2.0.json")
+        self.assertEqual(family.get("name"), "Beautiful Tomorrow")
+        self.assertTrue(family.get("author"))
+        self.assertEqual(len(family["themes"]), len(VARIANTS))
+        for variant, (theme_name, appearance) in ZED_VARIANT_NAMES.items():
+            with self.subTest(variant=variant):
+                self.assertIn(theme_name, themes)
+                theme = themes[theme_name]
+                self.assertEqual(theme["appearance"], appearance)
+                style = theme["style"]
+                for key, val in style.items():
+                    if isinstance(val, str) and key != "background.appearance":
+                        hex_rgb(val)
+                for accent in style.get("accents", []):
+                    hex_rgb(accent)
+                for player in style["players"]:
+                    for field in ("cursor", "background", "selection"):
+                        hex_rgb(player[field])
+                for capture, spec_val in style["syntax"].items():
+                    with self.subTest(capture=capture):
+                        if spec_val.get("color") is not None:
+                            hex_rgb(spec_val["color"])
+                        self.assertIn(spec_val.get("font_style"), (None, "normal", "italic", "oblique"))
+                        self.assertIn(spec_val.get("font_weight"), (None, 100, 200, 300, 400, 500, 600, 700, 800, 900))
+
+    def test_zed_editor_matches_the_palette(self):
+        _, themes = zed_themes()
+        for variant, (theme_name, _) in ZED_VARIANT_NAMES.items():
+            p = palette(variant)
+            style = themes[theme_name]["style"]
+            with self.subTest(variant=variant):
+                self.assertEqual(hex_rgb(style["editor.background"]), p["background"])
+                self.assertEqual(hex_rgb(style["editor.foreground"]), p["foreground"])
+                self.assertEqual(hex_rgb(style["players"][0]["selection"]), p["selection"])
+
+    def test_zed_syntax_matches_the_palette(self):
+        _, themes = zed_themes()
+        for variant, (theme_name, _) in ZED_VARIANT_NAMES.items():
+            p = palette(variant)
+            syntax = themes[theme_name]["style"]["syntax"]
+            for role, captures in spec.ZED_ROLE_SYNTAX.items():
+                for capture in captures:
+                    with self.subTest(variant=variant, capture=capture):
+                        self.assertIn(capture, syntax, f"{capture} missing from {theme_name}")
+                        self.assertEqual(hex_rgb(syntax[capture]["color"]), p["syntax"][role],
+                                         f"{theme_name}: syntax.{capture} should be "
+                                         f"palette syntax.{role}")
+
+    def test_zed_terminal_matches_the_palette(self):
+        _, themes = zed_themes()
+        for variant, (theme_name, _) in ZED_VARIANT_NAMES.items():
+            p = palette(variant)
+            style = themes[theme_name]["style"]
+            with self.subTest(variant=variant):
+                self.assertEqual(hex_rgb(style["terminal.background"]), p["background"])
+                self.assertEqual(hex_rgb(style["terminal.foreground"]), p["foreground"])
+            for slot, key in spec.ZED_ANSI_SLOTS.items():
+                with self.subTest(variant=variant, slot=slot):
+                    self.assertEqual(hex_rgb(style[key]), p["ansi"][str(slot)],
+                                     f"{theme_name}: {key} must match ANSI slot {slot}")
 
 
 class QualityTest(unittest.TestCase):

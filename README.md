@@ -1,6 +1,6 @@
 # Beautiful Tomorrow
 
-One palette, four places: Kakoune, Giallo, Ghostty and Foot. The light and dark
+One palette, five places: Kakoune, Giallo, Zed, Ghostty and Foot. The light and dark
 variants are the *same* colours adjusted for contrast — measured, not eyeballed,
 and enforced by tests.
 
@@ -15,6 +15,7 @@ palette/night.toml            the source of truth for the dark variant
 palette/light.toml            the source of truth for the light variant
 kakoune/colors/*.kak          Kakoune colourschemes (hand-authored detail)
 giallo/*.json                 Giallo TextMate themes (hand-authored detail)
+zed/themes/*.json             Zed theme family (hand-authored detail)
 terminal/ghostty/*            generated: Ghostty themes
 terminal/foot/theme.ini       generated: Foot [colors-dark] / [colors-light]
 generate.py                   palette -> terminal themes
@@ -22,9 +23,10 @@ spec.py                       the shared vocabulary the tests enforce
 tests/                        parity, contrast floors, hue consistency
 ```
 
-The Kakoune and Giallo files carry far more than a palette — 49 faces, UI
-colours, composited translucency — so they are hand-maintained. Every colour they
-share with the palette is checked against it, so they cannot drift.
+The Kakoune, Giallo and Zed files carry far more than a palette — faces, UI
+colours, syntax captures, composited translucency — so they are hand-maintained.
+Every colour they share with the palette is checked against it, so they cannot
+drift.
 
 ## The design rule
 
@@ -76,6 +78,19 @@ set-option global appearance_light_theme 'beautiful-tomorrow-light'
 `~/.config/giallo.kak/config.toml`, then `giallo-set-theme beautiful-tomorrow-night`.
 The internal `name` of each file matches its filename, which Giallo requires.
 
+**Zed** — copy or symlink `zed/themes/beautiful-tomorrow.json` into
+`~/.config/zed/themes` and select the pair in `~/.config/zed/settings.json`:
+
+```json
+{
+  "theme": {
+    "mode": "system",
+    "light": "Beautiful Tomorrow Light",
+    "dark": "Beautiful Tomorrow Night"
+  }
+}
+```
+
 **Ghostty** — copy `terminal/ghostty/*` into Ghostty's `themes` directory and
 select the pair:
 
@@ -96,12 +111,14 @@ python3 generate.py          # rewrite the terminal themes
 python3 -m unittest discover -s tests -v
 ```
 
-If the change also needs to reach the editor, edit the `.kak`/`.json` too — the
-tests will tell you exactly which face still disagrees with the palette.
+If the change also needs to reach the editors, edit the `.kak`/`.json` too — the
+tests will tell you exactly which face or capture still disagrees with the palette.
 
 ## What the tests guarantee
 
 - every face listed in `spec.ROLE_FACES` carries the palette's colour for its role;
+- every Zed syntax capture listed in `spec.ZED_ROLE_SYNTAX` carries the palette's
+  colour for its role, and Zed's editor and integrated terminal match the palette;
 - each ANSI slot that has an editor equivalent (`red`, `green`, `yellow`, `blue`,
   `magenta`, `cyan`, `bright black`) is that same colour;
 - Ghostty and Foot agree key for key, so the two terminals cannot drift apart;

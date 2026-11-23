@@ -14,6 +14,42 @@ ROLE_FACES = {
     "operator": ["operator", "bold", "italic"],
 }
 
+# Which Zed syntax captures must carry a palette colour. Verified by the parity
+# test, matching the Kakoune ROLE_FACES above.
+ZED_ROLE_SYNTAX = {
+    "comment": ["comment", "comment.doc"],
+    "string": ["string"],
+    "keyword": ["keyword", "text.literal"],
+    "function": ["function", "constructor", "label", "link_uri"],
+    "variable": ["variable", "variable.parameter"],
+    "type": ["type", "enum", "namespace", "string.escape"],
+    "constant": ["tag", "property", "variable.special", "title", "preproc",
+                 "punctuation.special"],
+    "orange": ["number", "boolean", "constant", "attribute",
+               "punctuation.list_marker", "link_text", "variant"],
+    "operator": ["operator", "emphasis", "emphasis.strong", "selector"],
+}
+
+# ANSI slot -> Zed integrated terminal style key.
+ZED_ANSI_SLOTS = {
+    0: "terminal.ansi.black",
+    1: "terminal.ansi.red",
+    2: "terminal.ansi.green",
+    3: "terminal.ansi.yellow",
+    4: "terminal.ansi.blue",
+    5: "terminal.ansi.magenta",
+    6: "terminal.ansi.cyan",
+    7: "terminal.ansi.white",
+    8: "terminal.ansi.bright_black",
+    9: "terminal.ansi.bright_red",
+    10: "terminal.ansi.bright_green",
+    11: "terminal.ansi.bright_yellow",
+    12: "terminal.ansi.bright_blue",
+    13: "terminal.ansi.bright_magenta",
+    14: "terminal.ansi.bright_cyan",
+    15: "terminal.ansi.bright_white",
+}
+
 # ANSI slot -> the palette role it must match, when there is one. Slots 7 and 15
 # are whites/greys with no editor equivalent; 8 is the comment colour.
 SLOT_ROLE = {1: "constant", 2: "string", 3: "type", 4: "function",

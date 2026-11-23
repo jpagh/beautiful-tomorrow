@@ -1,8 +1,9 @@
 # Beautiful Tomorrow — night.
 #
 # The single source of truth for every artifact in this repo: the Kakoune
-# colourscheme, the Giallo TextMate theme, and the Ghostty/Foot terminal themes
-# are all checked against (and, for the terminal, generated from) this file.
+# colourscheme, the Giallo TextMate theme, the Zed theme, and the Ghostty/Foot
+# terminal themes are all checked against (and, for the terminal, generated
+# from) this file.
 #
 # Canonical here is the Tomorrow palette the terminal has been using, because
 # the Kakoune theme already matched it to within rounding. See palette/light.toml
