@@ -218,6 +218,24 @@ class QualityTest(unittest.TestCase):
                 self.assertLessEqual(drift, limit,
                                      f"{role}: {drift:.1f}° hue drift")
 
+    def test_zed_tab_contrast(self):
+        _, themes = zed_themes()
+        for variant, (theme_name, _) in ZED_VARIANT_NAMES.items():
+            style = themes[theme_name]["style"]
+            active = hex_rgb(style["tab.active_background"])
+            inactive = hex_rgb(style["tab.inactive_background"])
+            bar = hex_rgb(style["tab_bar.background"])
+            with self.subTest(variant=variant, pair="active/inactive"):
+                self.assertGreaterEqual(
+                    contrast(active, inactive), spec.ZED_TAB_MIN_CONTRAST,
+                    f"{theme_name}: active tab #{active} vs inactive #{inactive}",
+                )
+            with self.subTest(variant=variant, pair="active/tab_bar"):
+                self.assertGreaterEqual(
+                    contrast(active, bar), spec.ZED_TAB_MIN_CONTRAST,
+                    f"{theme_name}: active tab #{active} vs tab bar #{bar}",
+                )
+
 
 class GeneratedOutputTest(unittest.TestCase):
     def test_generated_terminal_themes_are_current(self):

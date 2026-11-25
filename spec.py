@@ -76,3 +76,7 @@ MIN_CONTRAST = {
 # the night colour's hue, only lighter. `aqua` gets more room because light has
 # no cyan of its own -- it is borrowed from stock Tomorrow light.
 HUE_DRIFT = {"default": 12.0, "aqua": 16.0}
+
+# Minimum contrast between Zed's active tab and inactive tabs / tab bar so the
+# current tab stays visually distinct in both variants.
+ZED_TAB_MIN_CONTRAST = 1.3
