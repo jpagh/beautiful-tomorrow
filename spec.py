@@ -108,7 +108,7 @@ WAYBAR_MIN_CONTRAST = {
 # border, background, text, indicator, child_border. `focused_tab_title` takes
 # only the first three; Sway ignores indicator/child_border for that class.
 SWAY_CLIENT_ROLES = {
-    "focused": ("selection", "selection", "foreground", "comment",
+    "focused": ("comment", "selection", "foreground", "comment",
                 "selection"),
     "focused_inactive": ("selection", "background", "comment", "selection",
                          "background"),
