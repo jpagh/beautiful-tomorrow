@@ -1,8 +1,8 @@
 # Beautiful Tomorrow
 
-One palette, five places: Kakoune, Giallo, Zed, Ghostty and Foot. The light and dark
-variants are the *same* colours adjusted for contrast — measured, not eyeballed,
-and enforced by tests.
+One palette, six places: Kakoune, Giallo, Zed, Ghostty, Foot and Waybar. The
+light and dark variants are the *same* colours adjusted for contrast — measured,
+not eyeballed, and enforced by tests.
 
 Derived from [Beautiful UI](https://github.com/swashata/vscode-beautiful-ui) by
 Swashata Ghosh, which adapts Chris Kempson's [Tomorrow](https://github.com/chriskempson/tomorrow-theme).
@@ -18,15 +18,16 @@ giallo/*.json                 Giallo TextMate themes (hand-authored detail)
 zed/themes/*.json             Zed theme family (hand-authored detail)
 terminal/ghostty/*            generated: Ghostty themes
 terminal/foot/theme.ini       generated: Foot [colors-dark] / [colors-light]
+waybar/beautiful-tomorrow-night.css  Waybar theme (night only; no light/dark signal)
 generate.py                   palette -> terminal themes
 spec.py                       the shared vocabulary the tests enforce
 tests/                        parity, contrast floors, hue consistency
 ```
 
-The Kakoune, Giallo and Zed files carry far more than a palette — faces, UI
-colours, syntax captures, composited translucency — so they are hand-maintained.
-Every colour they share with the palette is checked against it, so they cannot
-drift.
+The Kakoune, Giallo, Zed and Waybar files carry far more than a palette — faces,
+UI colours, syntax captures, composited translucency, bar layout — so they are
+hand-maintained. Every colour they share with the palette is checked against it,
+so they cannot drift.
 
 ## The design rule
 
@@ -103,6 +104,23 @@ theme = light:Tomorrow,dark:Tomorrow Night
 darkman, `initial-color-theme` belongs in `foot.ini`, because darkman owns
 `state.ini`.
 
+**Sway / Waybar** — copy or symlink `waybar/beautiful-tomorrow-night.css` into
+`~/.config/waybar` and import it from `~/.config/waybar/style.css`:
+
+```css
+@import url("beautiful-tomorrow-night.css");
+```
+
+The theme is night-only: Sway and Waybar have no system light/dark signal of
+their own, so there is no mode for a light bar to follow. The dark variant is
+the canonical one, and it is what the bar uses.
+
+Every indicator (clock, audio, network, CPU, memory, battery, tray, power) sits
+on the same `selection` block with `foreground` text. State is carried by text
+colour — `function` blue for active, `string` green for good, `constant` red for
+critical, `comment` grey for inactive — so the bar reads as one surface rather
+than a row of coloured blocks.
+
 ## Changing a colour
 
 ```sh
@@ -111,14 +129,17 @@ python3 generate.py          # rewrite the terminal themes
 python3 -m unittest discover -s tests -v
 ```
 
-If the change also needs to reach the editors, edit the `.kak`/`.json` too — the
-tests will tell you exactly which face or capture still disagrees with the palette.
+If the change also needs to reach the editors or the bar, edit the
+`.kak`/`.json`/`.css` too — the tests will tell you exactly which face, capture
+or block still disagrees with the palette.
 
 ## What the tests guarantee
 
 - every face listed in `spec.ROLE_FACES` carries the palette's colour for its role;
 - every Zed syntax capture listed in `spec.ZED_ROLE_SYNTAX` carries the palette's
   colour for its role, and Zed's editor and integrated terminal match the palette;
+- every colour in the Waybar theme is in `palette/night.toml`, every indicator
+  shares one `selection` block background, and its text meets a contrast floor;
 - each ANSI slot that has an editor equivalent (`red`, `green`, `yellow`, `blue`,
   `magenta`, `cyan`, `bright black`) is that same colour;
 - Ghostty and Foot agree key for key, so the two terminals cannot drift apart;
@@ -135,5 +156,8 @@ tests will tell you exactly which face or capture still disagrees with the palet
   values so they cannot slide further.
 - **No aqua in the editor.** Neither variant uses cyan for a face; light borrows
   stock Tomorrow's `3e999f` for the terminal slot only.
+- **The bar is night-only.** Sway and Waybar expose no system light/dark setting
+  of their own, unlike the editors and terminals, so `waybar/` ships the dark
+  variant only.
 - **Giallo has no selection colour.** Its selection background comes from VS Code's
   own values, not from this palette.

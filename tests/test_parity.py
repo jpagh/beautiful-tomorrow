@@ -22,6 +22,7 @@ VARIANTS = ("night", "light")
 KAK = {v: ROOT / "kakoune" / "colors" / f"beautiful-tomorrow-{v}.kak" for v in VARIANTS}
 GIALLO = {v: ROOT / "giallo" / f"beautiful-tomorrow-{v}.json" for v in VARIANTS}
 ZED = ROOT / "zed" / "themes" / "beautiful-tomorrow.json"
+WAYBAR = ROOT / "waybar" / "beautiful-tomorrow-night.css"
 ZED_VARIANT_NAMES = {
     "night": ("Beautiful Tomorrow Night", "dark"),
     "light": ("Beautiful Tomorrow Light", "light"),
@@ -56,6 +57,34 @@ def faces(path):
         bg = re.search(r"rgb:([0-9A-Fa-f]{6})", parts[1]) if len(parts) > 1 else None
         out[m.group(1)] = (fg.group(1).lower() if fg else None,
                            bg.group(1).lower() if bg else None)
+    return out
+
+
+def css_rules(path):
+    """[(selectors, declarations)] for the flat rules in a Waybar stylesheet."""
+    text = re.sub(r"/\*.*?\*/", "", path.read_text(), flags=re.S)
+    rules = []
+    for selectors, body in re.findall(r"([^{}]+)\{([^{}]*)\}", text):
+        declarations = {}
+        for declaration in body.split(";"):
+            if ":" in declaration:
+                key, value = declaration.split(":", 1)
+                declarations[key.strip()] = value.strip()
+        rules.append(([s.strip() for s in selectors.split(",")], declarations))
+    return rules
+
+
+def css_colour(value):
+    m = re.search(r"#[0-9a-fA-F]{6}\b", value)
+    return m.group(0)[1:].lower() if m else None
+
+
+def palette_colours(p):
+    """Every colour in a palette file, normalised to lowercase rrggbb."""
+    out = {p[k] for k in ("background", "foreground", "cursor", "cursor_text",
+                          "selection")}
+    out |= set(p["syntax"].values())
+    out |= set(p["ansi"].values())
     return out
 
 
@@ -191,6 +220,56 @@ class PaletteAgreementTest(unittest.TestCase):
                     self.assertEqual(hex_rgb(style[key]), p["ansi"][str(slot)],
                                      f"{theme_name}: {key} must match ANSI slot {slot}")
 
+    def test_waybar_uses_only_the_night_palette(self):
+        allowed = palette_colours(palette("night"))
+        colours = set(re.findall(r"#[0-9a-fA-F]{6}\b", WAYBAR.read_text()))
+        self.assertTrue(colours, "waybar stylesheet has no colours")
+        for colour in sorted(colours):
+            with self.subTest(colour=colour):
+                self.assertIn(colour[1:].lower(), allowed,
+                              f"waybar uses {colour}, not in palette/night.toml")
+
+    def test_waybar_bar_and_blocks_match_the_palette(self):
+        p = palette("night")
+        rules = css_rules(WAYBAR)
+
+        def rule(selector):
+            for selectors, declarations in rules:
+                if selector in selectors:
+                    return declarations
+            self.fail(f"{selector} missing from {WAYBAR.name}")
+
+        bar = rule("window#waybar")
+        self.assertEqual(css_colour(bar["background-color"]), p["background"])
+        self.assertEqual(css_colour(bar["color"]), p["foreground"])
+
+        block = next((declarations for selectors, declarations in rules
+                      if set(spec.WAYBAR_MODULES) <= set(selectors)), None)
+        self.assertIsNotNone(block, "no single rule groups every Waybar indicator")
+        self.assertEqual(css_colour(block["background-color"]),
+                         p[spec.WAYBAR_MODULE_BACKGROUND])
+        self.assertEqual(css_colour(block["color"]), p["foreground"])
+
+    def test_waybar_states_use_the_palette_accents(self):
+        p = palette("night")
+        rules = css_rules(WAYBAR)
+
+        def rule(selector):
+            for selectors, declarations in rules:
+                if selector in selectors:
+                    return declarations
+            self.fail(f"{selector} missing from {WAYBAR.name}")
+
+        focused = rule("#workspaces button.focused")
+        self.assertEqual(css_colour(focused["background-color"]),
+                         p["syntax"]["function"])
+        self.assertEqual(css_colour(focused["color"]), p["background"])
+
+        urgent = rule("#workspaces button.urgent")
+        self.assertEqual(css_colour(urgent["background-color"]),
+                         p["syntax"]["constant"])
+        self.assertEqual(css_colour(urgent["color"]), p["background"])
+
 
 class QualityTest(unittest.TestCase):
     def test_contrast_floors(self):
@@ -235,6 +314,25 @@ class QualityTest(unittest.TestCase):
                     contrast(active, bar), spec.ZED_TAB_MIN_CONTRAST,
                     f"{theme_name}: active tab #{active} vs tab bar #{bar}",
                 )
+
+    def test_waybar_contrast(self):
+        p = palette("night")
+        bg = p["background"]
+        block = p[spec.WAYBAR_MODULE_BACKGROUND]
+        accent = p["syntax"]["function"]
+        urgent = p["syntax"]["constant"]
+        self.assertGreaterEqual(contrast(p["foreground"], bg),
+                                spec.WAYBAR_MIN_CONTRAST["foreground"])
+        self.assertGreaterEqual(contrast(p["foreground"], block),
+                                spec.WAYBAR_MIN_CONTRAST["foreground"])
+        self.assertGreaterEqual(contrast(p["syntax"]["comment"], bg),
+                                spec.WAYBAR_MIN_CONTRAST["comment"])
+        self.assertGreaterEqual(contrast(accent, block),
+                                spec.WAYBAR_MIN_CONTRAST["accent"])
+        self.assertGreaterEqual(contrast(bg, accent),
+                                spec.WAYBAR_MIN_CONTRAST["accent"])
+        self.assertGreaterEqual(contrast(bg, urgent),
+                                spec.WAYBAR_MIN_CONTRAST["accent"])
 
 
 class GeneratedOutputTest(unittest.TestCase):

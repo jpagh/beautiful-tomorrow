@@ -80,3 +80,24 @@ HUE_DRIFT = {"default": 12.0, "aqua": 16.0}
 # Minimum contrast between Zed's active tab and inactive tabs / tab bar so the
 # current tab stays visually distinct in both variants.
 ZED_TAB_MIN_CONTRAST = 1.3
+
+# Waybar indicators that must share one block background. The bar is night-only:
+# Sway and Waybar have no system light/dark signal of their own, so there is no
+# mode for a light variant to follow. Verified against the single shared rule in
+# waybar/beautiful-tomorrow-night.css.
+WAYBAR_MODULE_BACKGROUND = "selection"
+WAYBAR_MODULES = [
+    "#mode", "#idle_inhibitor", "#pulseaudio", "#wireplumber", "#network",
+    "#cpu", "#memory", "#temperature", "#backlight", "#custom-battery",
+    "#custom-battery-saver", "#battery", "#power-profiles-daemon", "#clock",
+    "#tray", "#scratchpad", "#mpd", "#language", "#keyboard-state",
+    "#custom-power",
+]
+
+# Contrast floors for the Waybar surface: foreground text on an indicator block,
+# comment grey on the bar, and dark text on the blue accent / red urgent block.
+WAYBAR_MIN_CONTRAST = {
+    "foreground": 6.5,
+    "comment": 5.0,
+    "accent": 4.0,
+}
