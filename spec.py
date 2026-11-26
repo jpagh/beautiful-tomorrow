@@ -90,7 +90,7 @@ ZED_TAB_MIN_CONTRAST = 1.3
 WAYBAR_MODULES = [
     "#mode", "#idle_inhibitor", "#pulseaudio", "#wireplumber", "#network",
     "#cpu", "#memory", "#temperature", "#backlight", "#custom-battery",
-    "#custom-battery-saver", "#battery", "#power-profiles-daemon", "#clock",
+    "#battery", "#power-profiles-daemon", "#clock",
     "#tray", "#scratchpad", "#mpd", "#language", "#keyboard-state",
     "#custom-power",
 ]
