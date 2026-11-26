@@ -24,9 +24,71 @@ GIALLO = {v: ROOT / "giallo" / f"beautiful-tomorrow-{v}.json" for v in VARIANTS}
 ZED = ROOT / "zed" / "themes" / "beautiful-tomorrow.json"
 WAYBAR = ROOT / "waybar" / "beautiful-tomorrow-night.css"
 SWAY = ROOT / "sway" / "beautiful-tomorrow-night.conf"
+TTT = {v: ROOT / "ttt" / "themes" / f"beautiful-tomorrow-{v}.json" for v in VARIANTS}
 ZED_VARIANT_NAMES = {
     "night": ("Beautiful Tomorrow Night", "dark"),
     "light": ("Beautiful Tomorrow Light", "light"),
+}
+
+# The sections a full ttt theme carries; a missing one falls back to ttt's own
+# defaults, which belong to neither variant.
+TTT_SECTIONS = (
+    "default", "muted", "success", "danger", "warning", "conflict",
+    "border", "borderActive", "statusBar", "commitHeader", "tabs", "sidebar",
+    "dialog", "editor", "menu", "input", "button", "hover", "diff",
+    "scrollbar", "syntax", "terminal", "borders",
+)
+
+# ttt UI surfaces, grouped by the contrast tier each must clear. Pairs are
+# (label, foreground path, background path) into the theme.
+TTT_UI_PAIRS = {
+    "text": [
+        ("default", "default.fg", "default.bg"),
+        ("statusBar", "statusBar.fg", "statusBar.bg"),
+        ("tabs.active", "tabs.active.fg", "tabs.active.bg"),
+        ("tabs.inactive", "tabs.inactive.fg", "default.bg"),
+        ("sidebar.header", "sidebar.header.fg", "default.bg"),
+        ("sidebar.item", "sidebar.item.fg", "default.bg"),
+        ("sidebar.selected", "sidebar.selected.fg", "sidebar.selected.bg"),
+        ("dialog.input", "dialog.input.fg", "dialog.input.bg"),
+        ("dialog.item", "dialog.item.fg", "default.bg"),
+        ("dialog.selected", "dialog.selected.fg", "dialog.selected.bg"),
+        ("dialog.muted", "dialog.muted.fg", "default.bg"),
+        ("menu.item", "menu.item.fg", "default.bg"),
+        ("menu.active", "menu.active.fg", "menu.active.bg"),
+        ("input.item", "input.item.fg", "input.item.bg"),
+        ("button.item", "button.item.fg", "button.item.bg"),
+        ("button.focused", "button.focused.fg", "button.focused.bg"),
+        ("button.filled", "button.filled.fg", "button.filled.bg"),
+        ("button.inverse", "button.inverse.fg", "button.inverse.bg"),
+        ("hover.bold", "hover.bold.fg", "default.bg"),
+        ("hover.italic", "hover.italic.fg", "default.bg"),
+        ("hover.code", "hover.code.fg", "default.bg"),
+        ("editor.searchActive", "editor.searchActive.fg",
+         "editor.searchActive.bg"),
+    ],
+    "dim": [
+        ("input.placeholder", "input.placeholder.fg", "input.item.bg"),
+        ("input.action", "input.action.fg", "input.item.bg"),
+    ],
+    "marker": [
+        ("success", "success.fg", "default.bg"),
+        ("danger", "danger.fg", "default.bg"),
+        ("warning", "warning.fg", "default.bg"),
+        ("conflict", "conflict.fg", "default.bg"),
+        ("diag.error", "editor.diagnostics.error.fg", "default.bg"),
+        ("diag.warning", "editor.diagnostics.warning.fg", "default.bg"),
+        ("diag.info", "editor.diagnostics.info.fg", "default.bg"),
+        ("diag.hint", "editor.diagnostics.hint.fg", "default.bg"),
+        ("diff.gutterAdded", "diff.gutterAdded.fg", "diff.added.bg"),
+        ("diff.gutterDeleted", "diff.gutterDeleted.fg", "diff.deleted.bg"),
+        ("diff.gutterModified", "diff.gutterModified.fg", "diff.modified.bg"),
+    ],
+    "structure": [
+        ("border", "border.fg", "default.bg"),
+        ("lineNumber", "editor.lineNumber.fg", "default.bg"),
+        ("scrollbar", "scrollbar.fg", "scrollbar.bg"),
+    ],
 }
 
 
@@ -39,6 +101,33 @@ def zed_themes():
     with ZED.open() as f:
         family = json.load(f)
     return family, {t["name"]: t for t in family["themes"]}
+
+
+def ttt_themes():
+    out = {}
+    for name in VARIANTS:
+        with TTT[name].open() as f:
+            out[name] = json.load(f)
+    return out
+
+
+def walk(value, prefix=""):
+    """Yield (dotted key, leaf) for every leaf in a nested JSON value."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield from walk(child, f"{prefix}.{key}" if prefix else key)
+    elif isinstance(value, list):
+        for i, child in enumerate(value):
+            yield from walk(child, f"{prefix}[{i}]")
+    else:
+        yield prefix, value
+
+
+def ttt_colour(theme, path):
+    """Resolve a dotted ttt theme path such as 'tabs.active.fg'."""
+    for part in path.split("."):
+        theme = theme[part]
+    return hex_rgb(theme)
 
 
 def hex_rgb(value):
@@ -303,6 +392,39 @@ class PaletteAgreementTest(unittest.TestCase):
                 self.assertIn(cls, clients, f"client.{cls} missing from {SWAY.name}")
                 expected = ["#" + role_colour(p, role) for role in roles]
                 self.assertEqual([c.lower() for c in clients[cls]], expected)
+    def test_ttt_editor_matches_the_palette(self):
+        for name, theme in ttt_themes().items():
+            p = palette(name)
+            with self.subTest(variant=name):
+                self.assertEqual(hex_rgb(theme["default"]["fg"]), p["foreground"])
+                self.assertEqual(hex_rgb(theme["default"]["bg"]), p["background"])
+                self.assertEqual(hex_rgb(theme["editor"]["selection"]["bg"]),
+                                 p["selection"])
+
+    def test_ttt_syntax_matches_the_palette(self):
+        for name, theme in ttt_themes().items():
+            p = palette(name)
+            for role, slots in spec.TTT_ROLE_SYNTAX.items():
+                for slot in slots:
+                    with self.subTest(variant=name, slot=slot):
+                        self.assertIn(slot, theme["syntax"],
+                                      f"{slot} missing from {TTT[name].name}")
+                        self.assertEqual(hex_rgb(theme["syntax"][slot]["fg"]),
+                                         p["syntax"][role],
+                                         f"{TTT[name].name}: syntax.{slot} should be "
+                                         f"palette syntax.{role}")
+
+    def test_ttt_terminal_matches_the_palette(self):
+        for name, theme in ttt_themes().items():
+            p, terminal = palette(name), theme["terminal"]
+            with self.subTest(variant=name):
+                self.assertEqual(hex_rgb(terminal["foreground"]), p["foreground"])
+                self.assertEqual(hex_rgb(terminal["background"]), p["background"])
+                self.assertEqual(hex_rgb(terminal["selection"]), p["selection"])
+            for slot, key in spec.TTT_ANSI_SLOTS.items():
+                with self.subTest(variant=name, slot=slot):
+                    self.assertEqual(hex_rgb(terminal[key]), p["ansi"][str(slot)],
+                                     f"terminal.{key} must match ANSI slot {slot}")
 
 
 class QualityTest(unittest.TestCase):
@@ -376,6 +498,61 @@ class QualityTest(unittest.TestCase):
                                 spec.SWAY_MIN_CONTRAST["muted"])
         self.assertGreaterEqual(contrast(p["background"], p["syntax"]["constant"]),
                                 spec.SWAY_MIN_CONTRAST["urgent"])
+    def test_ttt_ui_contrast_floors(self):
+        for name, theme in ttt_themes().items():
+            for tier, pairs in TTT_UI_PAIRS.items():
+                floor = spec.TTT_MIN_CONTRAST[tier]
+                for label, fg, bg in pairs:
+                    with self.subTest(variant=name, surface=label):
+                        ratio = contrast(ttt_colour(theme, fg), ttt_colour(theme, bg))
+                        self.assertGreaterEqual(
+                            ratio, floor,
+                            f"{TTT[name].name}: {label} is {ratio:.2f}:1, "
+                            f"below the {tier} floor of {floor}:1",
+                        )
+
+    def test_ttt_tab_hierarchy(self):
+        for name, theme in ttt_themes().items():
+            active = ttt_colour(theme, "tabs.active.fg")
+            inactive = ttt_colour(theme, "tabs.inactive.fg")
+            with self.subTest(variant=name):
+                self.assertGreaterEqual(
+                    contrast(active, inactive), spec.TTT_TAB_MIN_CONTRAST,
+                    f"{TTT[name].name}: active tab #{active} vs "
+                    f"inactive #{inactive}",
+                )
+                self.assertTrue(theme["tabs"]["active"].get("bold"),
+                                "the active tab label should be bold")
+
+
+class TTTThemeTest(unittest.TestCase):
+    def test_ttt_themes_are_valid(self):
+        for name, theme in ttt_themes().items():
+            with self.subTest(variant=name):
+                for section in TTT_SECTIONS:
+                    self.assertIn(section, theme,
+                                  f"{TTT[name].name} has no {section} section")
+                for key, value in walk(theme):
+                    if not isinstance(value, str):
+                        continue
+                    if key.endswith((".fg", ".bg")) or key.startswith(
+                            ("terminal.", "editor.bracketColors")):
+                        self.assertRegex(value, r"^#[0-9a-f]{6}$",
+                                         f"{TTT[name].name}: {key} = {value!r}")
+
+    def test_ttt_variants_share_a_structure(self):
+        """Night and light differ in values only, so both stay one design."""
+        keys = {name: [key for key, _ in walk(theme)]
+                for name, theme in ttt_themes().items()}
+        self.assertEqual(keys["night"], keys["light"])
+
+    def test_ttt_markup_inserted_and_deleted_use_the_diff_colours(self):
+        for name, theme in ttt_themes().items():
+            with self.subTest(variant=name):
+                self.assertEqual(theme["syntax"]["inserted"]["fg"],
+                                 theme["diff"]["gutterAdded"]["fg"])
+                self.assertEqual(theme["syntax"]["deleted"]["fg"],
+                                 theme["diff"]["gutterDeleted"]["fg"])
 
 
 class GeneratedOutputTest(unittest.TestCase):

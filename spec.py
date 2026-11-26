@@ -30,6 +30,26 @@ ZED_ROLE_SYNTAX = {
     "operator": ["operator", "emphasis", "emphasis.strong", "selector"],
 }
 
+# Which ttt syntax slots must carry a palette colour. ttt paints tokens from the
+# `syntax` block when a theme ships no tokenColors, so every slot is pinned to the
+# role the Kakoune faces and Zed captures above give the same kind of token.
+#
+# Note the collision: ttt's `constant` slot is painted with the `orange` role,
+# because ttt uses it for constant.language (true/false/nil) and Tomorrow paints
+# those orange. The red `constant` role lands on `tag`, `property` and `self`.
+TTT_ROLE_SYNTAX = {
+    "comment": ["comment", "quote"],
+    "string": ["string", "regexp"],
+    "keyword": ["keyword", "control", "storage", "code"],
+    "function": ["function", "builtin", "decorator", "link"],
+    "type": ["type", "namespace", "escape"],
+    "constant": ["tag", "property", "self", "invalid", "heading"],
+    "orange": ["number", "attribute", "constant"],
+    "operator": ["operator", "bold", "italic", "selector"],
+    "variable": ["variable", "punctuation", "parameter", "readonlyVariable",
+                 "interpolation"],
+}
+
 # ANSI slot -> Zed integrated terminal style key.
 ZED_ANSI_SLOTS = {
     0: "terminal.ansi.black",
@@ -54,6 +74,14 @@ ZED_ANSI_SLOTS = {
 # are whites/greys with no editor equivalent; 8 is the comment colour.
 SLOT_ROLE = {1: "constant", 2: "string", 3: "type", 4: "function",
              5: "keyword", 6: "aqua", 8: "comment"}
+
+# ANSI slot -> ttt terminal colour key.
+TTT_ANSI_SLOTS = {
+    0: "black", 1: "red", 2: "green", 3: "yellow",
+    4: "blue", 5: "magenta", 6: "cyan", 7: "white",
+    8: "brightBlack", 9: "brightRed", 10: "brightGreen", 11: "brightYellow",
+    12: "brightBlue", 13: "brightMagenta", 14: "brightCyan", 15: "brightWhite",
+}
 
 # Contrast floors against each variant's own background. Regression guards
 # pinned to the current design, not quality claims: light-mode yellow is
@@ -80,6 +108,23 @@ HUE_DRIFT = {"default": 12.0, "aqua": 16.0}
 # Minimum contrast between Zed's active tab and inactive tabs / tab bar so the
 # current tab stays visually distinct in both variants.
 ZED_TAB_MIN_CONTRAST = 1.3
+
+# ttt's tab bar is drawn with box characters, so the active tab is told apart by
+# its label rather than by a filled background. This floor sits between the two
+# label colours, before the active tab's bold weight.
+TTT_TAB_MIN_CONTRAST = 2.5
+
+# ttt UI contrast floors, pinned to today's design as regression guards. The
+# light palette is inherently weak in the yellow range and its palette roles are
+# covered by MIN_CONTRAST; these tiers only cover the hand-picked UI greys and
+# the git/diagnostic markers, which are small glyphs where colour carries the
+# meaning.
+TTT_MIN_CONTRAST = {
+    "text": 4.4,
+    "dim": 3.2,        # placeholders and input actions
+    "marker": 2.3,     # git status and diagnostic glyphs
+    "structure": 1.5,  # borders, line numbers, scrollbar thumb
+}
 
 # Waybar indicators that sit directly on the bar. There is no per-module
 # background: the bar is one surface, and only the focused/urgent workspace

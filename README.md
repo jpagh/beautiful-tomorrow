@@ -1,6 +1,6 @@
 # Beautiful Tomorrow
 
-One palette, seven places: Kakoune, Giallo, Zed, Ghostty, Foot, Waybar and
+One palette, eight places: Kakoune, Giallo, Zed, ttt, Ghostty, Foot, Waybar and
 Sway. The light and dark variants are the *same* colours adjusted for contrast —
 measured, not eyeballed, and enforced by tests.
 
@@ -16,6 +16,7 @@ palette/light.toml            the source of truth for the light variant
 kakoune/colors/*.kak          Kakoune colourschemes (hand-authored detail)
 giallo/*.json                 Giallo TextMate themes (hand-authored detail)
 zed/themes/*.json             Zed theme family (hand-authored detail)
+ttt/themes/*.json             ttt themes (hand-authored detail)
 terminal/ghostty/*            generated: Ghostty themes
 terminal/foot/theme.ini       generated: Foot [colors-dark] / [colors-light]
 waybar/beautiful-tomorrow-night.css  Waybar theme (night only; no light/dark signal)
@@ -25,10 +26,10 @@ spec.py                       the shared vocabulary the tests enforce
 tests/                        parity, contrast floors, hue consistency
 ```
 
-The Kakoune, Giallo, Zed, Waybar and Sway files carry far more than a palette —
-faces, UI colours, syntax captures, composited translucency, bar layout, window
-decorations — so they are hand-maintained. Every colour they share with the
-palette is checked against it, so they cannot drift.
+The Kakoune, Giallo, Zed, ttt, Waybar and Sway files carry far more than a
+palette — faces, UI colours, syntax captures, composited translucency, bar
+layout, window decorations — so they are hand-maintained. Every colour they share
+with the palette is checked against it, so they cannot drift.
 
 ## The design rule
 
@@ -93,6 +94,24 @@ The internal `name` of each file matches its filename, which Giallo requires.
 }
 ```
 
+**ttt** — copy or symlink `ttt/themes/*.json` into `~/.config/ttt/themes` and set
+the theme in `~/.config/ttt/settings.json` (or pick it under **Options → Theme**):
+
+```json
+{ "theme": "beautiful-tomorrow-night" }
+```
+
+ttt has no way to follow the system appearance: the theme is an explicit
+setting, and manual switching is all it offers. Both files carry a `terminal`
+section, so the integrated terminal matches the editor without the
+`terminal-theme` plugin, which synthesises its own UI colours.
+
+These themes deliberately ship no `tokenColors` block. ttt treats a theme's
+`tokenColors` as authoritative — a token no rule matches keeps the default
+foreground — so a rule set copied in part would leave most code uncoloured. The
+`syntax` block is what ttt's classifier paints from, and every slot in it is
+pinned to the palette by the tests.
+
 **Ghostty** — copy `terminal/ghostty/*` into Ghostty's `themes` directory and
 select the pair:
 
@@ -155,6 +174,9 @@ or block still disagrees with the palette.
 - every face listed in `spec.ROLE_FACES` carries the palette's colour for its role;
 - every Zed syntax capture listed in `spec.ZED_ROLE_SYNTAX` carries the palette's
   colour for its role, and Zed's editor and integrated terminal match the palette;
+- every ttt syntax slot listed in `spec.TTT_ROLE_SYNTAX` carries the palette's
+  colour for its role, both ttt themes have the same structure, and the UI
+  surfaces clear their contrast floors;
 - every colour in the Waybar theme is in `palette/night.toml`, every indicator
   is transparent on the bar (only workspace focus/urgency is a filled block),
   and its text meets a contrast floor;
@@ -181,3 +203,7 @@ or block still disagrees with the palette.
   variant only.
 - **Giallo has no selection colour.** Its selection background comes from VS Code's
   own values, not from this palette.
+- **ttt's light UI markers are dim.** They come from Beautiful UI's light theme,
+  where the `warning` marker is `e19d18` (2.32:1 on white) and input actions use
+  the function blue (3.21:1). They are small glyphs whose colour carries the
+  meaning; the floors in `spec.py` pin them so they cannot slide further.
