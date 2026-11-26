@@ -229,7 +229,7 @@ class PaletteAgreementTest(unittest.TestCase):
                 self.assertIn(colour[1:].lower(), allowed,
                               f"waybar uses {colour}, not in palette/night.toml")
 
-    def test_waybar_bar_and_blocks_match_the_palette(self):
+    def test_waybar_bar_and_indicators_match_the_palette(self):
         p = palette("night")
         rules = css_rules(WAYBAR)
 
@@ -243,12 +243,12 @@ class PaletteAgreementTest(unittest.TestCase):
         self.assertEqual(css_colour(bar["background-color"]), p["background"])
         self.assertEqual(css_colour(bar["color"]), p["foreground"])
 
-        block = next((declarations for selectors, declarations in rules
-                      if set(spec.WAYBAR_MODULES) <= set(selectors)), None)
-        self.assertIsNotNone(block, "no single rule groups every Waybar indicator")
-        self.assertEqual(css_colour(block["background-color"]),
-                         p[spec.WAYBAR_MODULE_BACKGROUND])
-        self.assertEqual(css_colour(block["color"]), p["foreground"])
+        indicators = next((declarations for selectors, declarations in rules
+                           if set(spec.WAYBAR_MODULES) <= set(selectors)), None)
+        self.assertIsNotNone(indicators,
+                             "no single rule groups every Waybar indicator")
+        self.assertEqual(indicators.get("background-color"), "transparent")
+        self.assertEqual(css_colour(indicators["color"]), p["foreground"])
 
     def test_waybar_states_use_the_palette_accents(self):
         p = palette("night")
@@ -318,16 +318,16 @@ class QualityTest(unittest.TestCase):
     def test_waybar_contrast(self):
         p = palette("night")
         bg = p["background"]
-        block = p[spec.WAYBAR_MODULE_BACKGROUND]
+        hover = p["selection"]
         accent = p["syntax"]["function"]
         urgent = p["syntax"]["constant"]
         self.assertGreaterEqual(contrast(p["foreground"], bg),
                                 spec.WAYBAR_MIN_CONTRAST["foreground"])
-        self.assertGreaterEqual(contrast(p["foreground"], block),
+        self.assertGreaterEqual(contrast(p["foreground"], hover),
                                 spec.WAYBAR_MIN_CONTRAST["foreground"])
         self.assertGreaterEqual(contrast(p["syntax"]["comment"], bg),
                                 spec.WAYBAR_MIN_CONTRAST["comment"])
-        self.assertGreaterEqual(contrast(accent, block),
+        self.assertGreaterEqual(contrast(accent, bg),
                                 spec.WAYBAR_MIN_CONTRAST["accent"])
         self.assertGreaterEqual(contrast(bg, accent),
                                 spec.WAYBAR_MIN_CONTRAST["accent"])

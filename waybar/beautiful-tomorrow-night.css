@@ -5,11 +5,12 @@
  * dark variant is the canonical one here; the editors and terminals are the
  * places where both variants live.
  *
- * Every indicator is the same block: palette selection (#373b41) on the
- * palette background (#1d1f21), with palette foreground (#c5c8c6) text.
- * State is carried by text colour -- blue for active, green for good, red for
- * critical, comment grey for inactive -- so the bar never turns into a
- * rainbow of differently coloured blocks again.
+ * Every indicator sits directly on the palette background (#1d1f21), with
+ * palette foreground (#c5c8c6) text. Only the focused workspace is a filled
+ * accent block; urgent stays a filled red block. State is otherwise carried by
+ * text colour -- blue for active, green for good, red for critical, comment
+ * grey for inactive -- so the bar stays one surface instead of becoming a
+ * rainbow of differently coloured blocks.
  *
  * Install by importing this file from ~/.config/waybar/style.css, or symlink
  * it there directly; see the README.
@@ -81,7 +82,7 @@ menu menuitem:hover {
     color: #1d1f21;
 }
 
-/* One block surface for every indicator. No module gets its own colour. */
+/* No block surfaces: indicators sit directly on the bar. */
 #mode,
 #idle_inhibitor,
 #pulseaudio,
@@ -103,7 +104,7 @@ menu menuitem:hover {
 #keyboard-state,
 #custom-power {
     padding: 0 10px;
-    background-color: #373b41;
+    background-color: transparent;
     color: #c5c8c6;
 }
 
@@ -112,7 +113,7 @@ menu menuitem:hover {
     color: #c5c8c6;
 }
 
-/* State is foreground-only, so no indicator changes its block colour. */
+/* State is foreground-only, so no indicator draws a background. */
 #idle_inhibitor.activated {
     color: #81a2be;
 }
@@ -200,7 +201,7 @@ menu menuitem:hover {
     background-color: transparent;
 }
 
-/* Hover: the focused-workspace accent, with dark text on it. */
+/* Hover is a temporary selection-coloured block, not a different colour. */
 #mode:hover,
 #idle_inhibitor:hover,
 #pulseaudio:hover,
@@ -220,12 +221,12 @@ menu menuitem:hover {
 #mpd:hover,
 #language:hover,
 #keyboard-state:hover {
-    background-color: #81a2be;
-    color: #1d1f21;
+    background-color: #373b41;
+    color: #c5c8c6;
 }
 
-/* The power button is an action, not a state: red on hover. */
+/* The power button is an action: keep the hover block and redden the icon. */
 #custom-power:hover {
-    background-color: #cc6666;
-    color: #1d1f21;
+    background-color: #373b41;
+    color: #cc6666;
 }

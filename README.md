@@ -115,11 +115,13 @@ The theme is night-only: Sway and Waybar have no system light/dark signal of
 their own, so there is no mode for a light bar to follow. The dark variant is
 the canonical one, and it is what the bar uses.
 
-Every indicator (clock, audio, network, CPU, memory, battery, tray, power) sits
-on the same `selection` block with `foreground` text. State is carried by text
-colour — `function` blue for active, `string` green for good, `constant` red for
-critical, `comment` grey for inactive — so the bar reads as one surface rather
-than a row of coloured blocks.
+Every indicator (clock, audio, network, CPU, memory, battery, tray, power)
+sits directly on the bar background with `foreground` text; none of them draws
+a block of its own. Only the focused workspace is a filled `function` block,
+and an urgent workspace stays red. State is otherwise carried by text colour —
+blue for active, `string` green for good, `constant` red for critical, `comment`
+grey for inactive — so the bar reads as one surface rather than a row of
+coloured blocks. Hovering a module gives it a temporary `selection` background.
 
 ## Changing a colour
 
@@ -139,7 +141,8 @@ or block still disagrees with the palette.
 - every Zed syntax capture listed in `spec.ZED_ROLE_SYNTAX` carries the palette's
   colour for its role, and Zed's editor and integrated terminal match the palette;
 - every colour in the Waybar theme is in `palette/night.toml`, every indicator
-  shares one `selection` block background, and its text meets a contrast floor;
+  is transparent on the bar (only workspace focus/urgency is a filled block),
+  and its text meets a contrast floor;
 - each ANSI slot that has an editor equivalent (`red`, `green`, `yellow`, `blue`,
   `magenta`, `cyan`, `bright black`) is that same colour;
 - Ghostty and Foot agree key for key, so the two terminals cannot drift apart;
