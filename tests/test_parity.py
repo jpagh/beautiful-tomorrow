@@ -23,6 +23,7 @@ KAK = {v: ROOT / "kakoune" / "colors" / f"beautiful-tomorrow-{v}.kak" for v in V
 GIALLO = {v: ROOT / "giallo" / f"beautiful-tomorrow-{v}.json" for v in VARIANTS}
 ZED = ROOT / "zed" / "themes" / "beautiful-tomorrow.json"
 WAYBAR = ROOT / "waybar" / "beautiful-tomorrow-night.css"
+SWAY = ROOT / "sway" / "beautiful-tomorrow-night.conf"
 ZED_VARIANT_NAMES = {
     "night": ("Beautiful Tomorrow Night", "dark"),
     "light": ("Beautiful Tomorrow Light", "light"),
@@ -85,6 +86,21 @@ def palette_colours(p):
                           "selection")}
     out |= set(p["syntax"].values())
     out |= set(p["ansi"].values())
+    return out
+
+
+def role_colour(p, role):
+    """Resolve a palette role that may be top-level or under [syntax]."""
+    return p["syntax"][role] if role in p["syntax"] else p[role]
+
+
+def sway_clients(path):
+    """{class: ["#rrggbb", ...]} from client.* lines in a Sway config."""
+    out = {}
+    for line in path.read_text().splitlines():
+        m = re.match(r"^client\.(\w+)\s+(.+)$", line.strip())
+        if m:
+            out[m.group(1)] = re.findall(r"#[0-9a-fA-F]{6}", m.group(2))
     return out
 
 
@@ -270,6 +286,24 @@ class PaletteAgreementTest(unittest.TestCase):
                          p["syntax"]["constant"])
         self.assertEqual(css_colour(urgent["color"]), p["background"])
 
+    def test_sway_uses_only_the_night_palette(self):
+        allowed = palette_colours(palette("night"))
+        colours = set(re.findall(r"#[0-9a-fA-F]{6}\b", SWAY.read_text()))
+        self.assertTrue(colours, "sway config has no colours")
+        for colour in sorted(colours):
+            with self.subTest(colour=colour):
+                self.assertIn(colour[1:].lower(), allowed,
+                              f"sway uses {colour}, not in palette/night.toml")
+
+    def test_sway_client_colours_match_the_palette(self):
+        p = palette("night")
+        clients = sway_clients(SWAY)
+        for cls, roles in spec.SWAY_CLIENT_ROLES.items():
+            with self.subTest(client=cls):
+                self.assertIn(cls, clients, f"client.{cls} missing from {SWAY.name}")
+                expected = ["#" + role_colour(p, role) for role in roles]
+                self.assertEqual([c.lower() for c in clients[cls]], expected)
+
 
 class QualityTest(unittest.TestCase):
     def test_contrast_floors(self):
@@ -333,6 +367,15 @@ class QualityTest(unittest.TestCase):
                                 spec.WAYBAR_MIN_CONTRAST["accent"])
         self.assertGreaterEqual(contrast(bg, urgent),
                                 spec.WAYBAR_MIN_CONTRAST["accent"])
+
+    def test_sway_titlebar_contrast(self):
+        p = palette("night")
+        self.assertGreaterEqual(contrast(p["foreground"], p["selection"]),
+                                spec.SWAY_MIN_CONTRAST["text"])
+        self.assertGreaterEqual(contrast(p["syntax"]["comment"], p["background"]),
+                                spec.SWAY_MIN_CONTRAST["muted"])
+        self.assertGreaterEqual(contrast(p["background"], p["syntax"]["constant"]),
+                                spec.SWAY_MIN_CONTRAST["urgent"])
 
 
 class GeneratedOutputTest(unittest.TestCase):

@@ -103,3 +103,26 @@ WAYBAR_MIN_CONTRAST = {
     "comment": 5.0,
     "accent": 4.0,
 }
+
+# Sway client decoration colours, as palette roles for the five positions:
+# border, background, text, indicator, child_border. `focused_tab_title` takes
+# only the first three; Sway ignores indicator/child_border for that class.
+SWAY_CLIENT_ROLES = {
+    "focused": ("selection", "selection", "foreground", "comment",
+                "selection"),
+    "focused_inactive": ("selection", "background", "comment", "selection",
+                         "background"),
+    "focused_tab_title": ("selection", "background", "foreground"),
+    "unfocused": ("background", "background", "comment", "background",
+                  "background"),
+    "urgent": ("constant", "constant", "background", "background",
+               "constant"),
+}
+
+# Contrast floors for the title bar: focused text on selection, unfocused
+# comment grey on the background, and dark urgent text on constant red.
+SWAY_MIN_CONTRAST = {
+    "text": 6.5,
+    "muted": 5.0,
+    "urgent": 4.0,
+}

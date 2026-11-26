@@ -1,8 +1,8 @@
 # Beautiful Tomorrow
 
-One palette, six places: Kakoune, Giallo, Zed, Ghostty, Foot and Waybar. The
-light and dark variants are the *same* colours adjusted for contrast — measured,
-not eyeballed, and enforced by tests.
+One palette, seven places: Kakoune, Giallo, Zed, Ghostty, Foot, Waybar and
+Sway. The light and dark variants are the *same* colours adjusted for contrast —
+measured, not eyeballed, and enforced by tests.
 
 Derived from [Beautiful UI](https://github.com/swashata/vscode-beautiful-ui) by
 Swashata Ghosh, which adapts Chris Kempson's [Tomorrow](https://github.com/chriskempson/tomorrow-theme).
@@ -19,15 +19,16 @@ zed/themes/*.json             Zed theme family (hand-authored detail)
 terminal/ghostty/*            generated: Ghostty themes
 terminal/foot/theme.ini       generated: Foot [colors-dark] / [colors-light]
 waybar/beautiful-tomorrow-night.css  Waybar theme (night only; no light/dark signal)
+sway/beautiful-tomorrow-night.conf    Sway window decorations (night only)
 generate.py                   palette -> terminal themes
 spec.py                       the shared vocabulary the tests enforce
 tests/                        parity, contrast floors, hue consistency
 ```
 
-The Kakoune, Giallo, Zed and Waybar files carry far more than a palette — faces,
-UI colours, syntax captures, composited translucency, bar layout — so they are
-hand-maintained. Every colour they share with the palette is checked against it,
-so they cannot drift.
+The Kakoune, Giallo, Zed, Waybar and Sway files carry far more than a palette —
+faces, UI colours, syntax captures, composited translucency, bar layout, window
+decorations — so they are hand-maintained. Every colour they share with the
+palette is checked against it, so they cannot drift.
 
 ## The design rule
 
@@ -115,6 +116,20 @@ The theme is night-only: Sway and Waybar have no system light/dark signal of
 their own, so there is no mode for a light bar to follow. The dark variant is
 the canonical one, and it is what the bar uses.
 
+Window decorations live in `sway/beautiful-tomorrow-night.conf`; include it
+from your Sway config:
+
+```ini
+include ~/.config/sway/beautiful-tomorrow-night.conf
+```
+
+The focused title bar is the `selection` surface with `foreground` text;
+unfocused windows sit on the `background` with `comment`-grey text, and urgent
+windows get a `constant`-red title bar. Blue stays reserved for the selected
+workspace in the bar. If you remove the `sway/window` module from
+`modules-center`, the focused window's title appears only in the Sway title bar,
+not twice.
+
 Every indicator (clock, audio, network, CPU, memory, battery, tray, power)
 sits directly on the bar background with `foreground` text; none of them draws
 a block of its own. Only the focused workspace is a filled `function` block,
@@ -143,6 +158,8 @@ or block still disagrees with the palette.
 - every colour in the Waybar theme is in `palette/night.toml`, every indicator
   is transparent on the bar (only workspace focus/urgency is a filled block),
   and its text meets a contrast floor;
+- every Sway decoration colour is in `palette/night.toml`, and the focused,
+  inactive, unfocused and urgent title bars use the palette roles in `spec.py`;
 - each ANSI slot that has an editor equivalent (`red`, `green`, `yellow`, `blue`,
   `magenta`, `cyan`, `bright black`) is that same colour;
 - Ghostty and Foot agree key for key, so the two terminals cannot drift apart;
